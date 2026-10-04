@@ -16,7 +16,8 @@ import {
   Edit3,
   Globe,
   Loader2,
-  Tag
+  Tag,
+  ArrowLeftRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -27,6 +28,7 @@ export default function BulkActionsToolbar({
   onSourceChange,
   onTagsAdd,
   onDelete,
+  onTransfer = null,
   onCancel,
   isProcessing = false,
   progress = { current: 0, total: 0 },
@@ -245,6 +247,18 @@ export default function BulkActionsToolbar({
 
             {/* כפתורי פעולה */}
             <div className="flex items-center gap-2">
+              {onTransfer && (
+                <Button
+                  size="sm"
+                  onClick={onTransfer}
+                  className="gap-2 bg-orange-600 hover:bg-orange-700"
+                  disabled={isProcessing}
+                >
+                  <ArrowLeftRight className="w-4 h-4" />
+                  העבר לחברה
+                </Button>
+              )}
+
               <Button
                 variant="destructive"
                 size="sm"

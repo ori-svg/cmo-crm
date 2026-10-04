@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Tag as TagIcon } from "lucide-react";
 
-export default function LeadFilters({ filters, setFilters, currentCompanyId }) {
+export default function LeadFilters({ filters, setFilters, currentCompanyId, availableCampaigns = [] }) {
   const [availableTags, setAvailableTags] = useState([]);
   const [availableSources, setAvailableSources] = useState([]);
   const [availableStatuses, setAvailableStatuses] = useState([]);
@@ -138,7 +138,48 @@ export default function LeadFilters({ filters, setFilters, currentCompanyId }) {
           </div>
         </div>
 
-        {/* שורה שנייה: סינון לפי טאגים */}
+        {/* שורה שנייה: קמפיין וטווח תאריכי יצירה */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>קמפיין</Label>
+            <Select
+              value={filters.campaign || "הכל"}
+              onValueChange={(value) => setFilters({...filters, campaign: value})}
+            >
+              <SelectTrigger className="brand-select">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="הכל">הכל</SelectItem>
+                {availableCampaigns.map((campaign, idx) => (
+                  <SelectItem key={idx} value={campaign}>
+                    {campaign}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>נוצר מתאריך</Label>
+            <Input
+              type="date"
+              value={filters.dateFrom || ""}
+              onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>נוצר עד תאריך</Label>
+            <Input
+              type="date"
+              value={filters.dateTo || ""}
+              onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+            />
+          </div>
+        </div>
+
+        {/* שורה שלישית: סינון לפי טאגים */}
         {availableTags.length > 0 && (
           <div className="space-y-2 pt-2 border-t">
             <div className="flex items-center justify-between">

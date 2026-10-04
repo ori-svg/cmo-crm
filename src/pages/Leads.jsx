@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Lead, SavedView } from "@/api/entities";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Filter, Save, Eye, Settings, Upload, Download } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,8 +13,14 @@ import StatsBar from "../components/leads/StatsBar";
 import TableSettingsDialog from "../components/leads/TableSettingsDialog";
 import ImportLeadsDialog from "../components/leads/ImportLeadsDialog";
 import BulkActionsToolbar from "../components/leads/BulkActionsToolbar"; // Added
+import TransferLeadsDialog from "../components/leads/TransferLeadsDialog";
 
 const ADMIN_EMAIL = "ori@omerdaffan.com";
+const SUPER_ADMIN_EMAILS = ["ori@omerdaffan.com", "cmo@omerdaffan.com"];
+// כמה לידים לשלוח בכל קריאה לפונקציית ההעברה
+const TRANSFER_BATCH_SIZE = 10;
+// רשומות היסטוריה שנוצרות בהעברה - לא קמפיינים אמיתיים
+const TRANSFER_HISTORY_LABELS = ["העברה בין חברות", "העתקה בין חברות"];
 
 export default function LeadsPage({ currentCompanyId, currentUser }) {
   const [leads, setLeads] = useState([]);
@@ -29,6 +36,22 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
   const [selectedLeadIds, setSelectedLeadIds] = useState([]); // ✅ NEW: מעקב אחר לידים נבחרים
   const [isBulkProcessing, setIsBulkProcessing] = useState(false); // ✅ NEW: מעקב אחר עיבוד
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 }); // ✅ NEW: התקדמות
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+
+  const canTransferLeads = SUPER_ADMIN_EMAILS.includes(currentUser?.email);
+
+  const availableCampaigns = useMemo(() => {
+    const campaigns = new Set();
+    leads.forEach(lead => {
+      if (lead.fb_campaign) campaigns.add(lead.fb_campaign);
+      (lead.campaign_history || []).forEach(entry => {
+        if (entry?.campaign && !TRANSFER_HISTORY_LABELS.includes(entry.campaign)) {
+          campaigns.add(entry.campaign);
+        }
+      });
+    });
+    return [...campaigns].sort();
+  }, [leads]);
 
   useEffect(() => {
     if (currentUser && currentCompanyId) {
@@ -193,10 +216,20 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
     } else if (isCompanyAdmin) {
       data = await Lead.filter({ company_id: currentCompanyId || currentUser.company_id }, "-created_date");
     } else {
-      data = await Lead.filter({ 
-        created_by: currentUser.email,
-        company_id: currentUser.company_id 
-      }, "-created_date");
+      const [createdLeads, assignedLeads] = await Promise.all([
+        Lead.filter({ 
+          created_by: currentUser.email,
+          company_id: currentUser.company_id 
+        }, "-created_date"),
+        // לידים ששויכו לנציג (למשל בהעברה בין חברות)
+        Lead.filter({ 
+          assigned_to: currentUser.email,
+          company_id: currentUser.company_id 
+        }, "-created_date")
+      ]);
+      const seenIds = new Set(createdLeads.map(lead => lead.id));
+      data = [...createdLeads, ...assignedLeads.filter(lead => !seenIds.has(lead.id))]
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     }
     
     setLeads(data);
@@ -239,6 +272,23 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
         lead.email?.toLowerCase().includes(searchLower) ||
         lead.phone?.includes(searchLower)
       );
+    }
+
+    if (filters.campaign && filters.campaign !== "הכל") {
+      filtered = filtered.filter(lead =>
+        lead.fb_campaign === filters.campaign ||
+        (lead.campaign_history || []).some(entry => entry?.campaign === filters.campaign)
+      );
+    }
+
+    if (filters.dateFrom) {
+      const from = new Date(`${filters.dateFrom}T00:00:00`);
+      filtered = filtered.filter(lead => lead.created_date && new Date(lead.created_date) >= from);
+    }
+
+    if (filters.dateTo) {
+      const to = new Date(`${filters.dateTo}T23:59:59.999`);
+      filtered = filtered.filter(lead => lead.created_date && new Date(lead.created_date) <= to);
     }
 
     if (filters.tags && filters.tags.length > 0) {
@@ -474,6 +524,59 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
     }
   };
 
+  const handleBulkTransfer = async ({ targetCompanyId, targetCompanyName, mode, assignedUserId }) => {
+    if (selectedLeadIds.length === 0 || !canTransferLeads) return;
+
+    const leadIds = [...selectedLeadIds];
+    setShowTransferDialog(false);
+    setIsBulkProcessing(true);
+    setBulkProgress({ current: 0, total: leadIds.length });
+
+    let succeeded = 0;
+    const failures = [];
+
+    try {
+      for (let i = 0; i < leadIds.length; i += TRANSFER_BATCH_SIZE) {
+        const batch = leadIds.slice(i, i + TRANSFER_BATCH_SIZE);
+
+        try {
+          const response = await base44.functions.invoke('transfer-leads', {
+            lead_ids: batch,
+            target_company_id: targetCompanyId,
+            mode,
+            assigned_user_id: assignedUserId || null
+          });
+          succeeded += response.data?.transferred || 0;
+          failures.push(...(response.data?.errors || []));
+        } catch (error) {
+          console.error('Error transferring batch:', error);
+          const message = error.response?.data?.error || error.message;
+          failures.push(...batch.map(leadId => ({ lead_id: leadId, error: message })));
+        }
+
+        setBulkProgress({ current: Math.min(i + batch.length, leadIds.length), total: leadIds.length });
+      }
+
+      const actionLabel = mode === 'move' ? 'הועברו' : 'הועתקו';
+      let summary = `✅ ${succeeded} לידים ${actionLabel} ל"${targetCompanyName}"`;
+      if (failures.length > 0) {
+        const failedNames = failures.slice(0, 10).map(failure => {
+          const lead = leads.find(l => l.id === failure.lead_id);
+          const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : failure.lead_id;
+          return `• ${name}: ${failure.error}`;
+        });
+        summary += `\n\n⚠️ ${failures.length} לידים נכשלו:\n${failedNames.join('\n')}`;
+      }
+      alert(summary);
+
+      await loadLeads();
+      setSelectedLeadIds([]);
+    } finally {
+      setIsBulkProcessing(false);
+      setBulkProgress({ current: 0, total: 0 });
+    }
+  };
+
   const handleSelectLead = (leadId, isSelected) => {
     if (isSelected) {
       setSelectedLeadIds(prev => [...prev, leadId]);
@@ -578,6 +681,7 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
             onSourceChange={handleBulkSourceChange}
             onTagsAdd={handleBulkTagsAdd}
             onDelete={handleBulkDelete}
+            onTransfer={canTransferLeads ? () => setShowTransferDialog(true) : null}
             onCancel={() => setSelectedLeadIds([])}
             isProcessing={isBulkProcessing}
             progress={bulkProgress}
@@ -613,7 +717,12 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <LeadFilters filters={filters} setFilters={setFilters} currentCompanyId={currentCompanyId} />
+            <LeadFilters
+              filters={filters}
+              setFilters={setFilters}
+              currentCompanyId={currentCompanyId}
+              availableCampaigns={availableCampaigns}
+            />
           </motion.div>
         )}
 
@@ -638,6 +747,16 @@ export default function LeadsPage({ currentCompanyId, currentUser }) {
           onSave={handleAddLead}
           currentCompanyId={currentCompanyId}
         />
+
+        {canTransferLeads && (
+          <TransferLeadsDialog
+            open={showTransferDialog}
+            onClose={() => setShowTransferDialog(false)}
+            onConfirm={handleBulkTransfer}
+            selectedCount={selectedLeadIds.length}
+            currentCompanyId={currentCompanyId}
+          />
+        )}
 
         <ImportLeadsDialog
           open={showImportDialog}
