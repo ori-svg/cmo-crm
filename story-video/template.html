@@ -139,6 +139,19 @@ svg.ic { width: 100%; height: 100%; display: block; }
 #cta { position: absolute; left: 540px; top: 1500px; transform: translateX(-50%); height: 100px; padding: 0 44px; border-radius: 50px; white-space: nowrap;
   background: linear-gradient(135deg, #f3d27a, #c9971f); color: #1d1400; font: 900 40px/100px "Heebo", sans-serif; box-shadow: 0 18px 50px rgba(226,180,70,.45), 0 0 0 8px rgba(226,180,70,.15); }
 #cta .arr { display: inline-block; margin-right: 12px; }
+
+/* ── living logo (the mark itself is untouched; light, depth and orbits move around it) ── */
+.orb .lg { position: absolute; width: 250px; height: 250px; left: -125px; top: -125px; z-index: 2; }
+.orb .lg img { left: 0; top: 0; width: 250px; height: 250px; }
+.orb .shine { position: absolute; inset: 0; -webkit-mask: url({{logo64}}) center / contain no-repeat;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,248,225,.0) 42%, rgba(255,248,225,.9) 50%, rgba(255,248,225,0) 58%, transparent 62%);
+  background-size: 320% 100%; background-position: 100% 0; mix-blend-mode: screen; }
+.orb .spin { position: absolute; width: 350px; height: 350px; left: -175px; top: -175px; border-radius: 50%; z-index: 1;
+  background: conic-gradient(from 0deg, transparent 0 62%, rgba(255,226,150,.0) 64%, rgba(255,232,170,.95) 74%, rgba(34,211,238,.6) 76%, transparent 78%);
+  -webkit-mask: radial-gradient(circle, transparent 168px, #000 170px, #000 174px, transparent 176px); }
+.orb .sat { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d0, #e2b446 45%, #7a5a10); box-shadow: 0 0 16px rgba(226,180,70,.9); }
+.orb .sat.t { background: radial-gradient(circle at 35% 30%, #d9fffb, #14a096 45%, #064d48); box-shadow: 0 0 16px rgba(34,211,238,.8); }
 </style>
 </head>
 <body>
@@ -504,6 +517,37 @@ tl.fromTo("#orb7 .flash", { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2.4, 
   .to("#cta .arr", { x: -12, duration: 0.35, ease: "sine.inOut", yoyo: true, repeat: 5 }, T7 + 3.0)
   .to("#cta", { boxShadow: "0 18px 60px rgba(226,180,70,.7), 0 0 0 18px rgba(226,180,70,.12)", duration: 0.6, yoyo: true, repeat: 2, ease: "sine.inOut" }, T7 + 2.9)
   .set({}, {}, 30);
+
+/* ───────── living logo: glint, 3D breathing, beat pulse, orbiting satellites, light ring ───────── */
+const BEATS = []; for (let b = 3.3; b < 29.2; b += 60 / 96) BEATS.push(+b.toFixed(3));
+function liveLogo(sel, t0, t1) {
+  const o = document.querySelector(sel), img = o.querySelector("img");
+  const lg = div("lg", "", o); o.insertBefore(lg, img); lg.appendChild(img);
+  const shine = div("shine", "", lg);
+  const spin = div("spin", "", o); o.insertBefore(spin, lg);
+  const SATS = [ // orbit rx, ry, tilt(deg), phase, speed, size, teal?
+    [178, 50, -16, 0.0, 1.0, 22, 0], [178, 50, -16, 2.1, 1.0, 14, 1], [178, 50, -16, 4.2, 1.0, 17, 0],
+    [150, 74, 30, 1.0, -1.35, 16, 1], [150, 74, 30, 3.4, -1.35, 12, 0], [205, 40, 8, 5.0, 0.7, 10, 0], [205, 40, 8, 2.6, 0.7, 13, 1]];
+  const sats = SATS.map(([, , , , , sz, teal]) => { const e = div("sat" + (teal ? " t" : ""), "", o, `width:${sz}px;height:${sz}px;margin:${-sz / 2}px 0 0 ${-sz / 2}px`); return e; });
+  const P = { a: 0, on: 0 };
+  const place = () => SATS.forEach(([rx, ry, tilt, ph, sp], i) => {
+    const a = P.a * sp + ph, x = Math.cos(a) * rx, y = Math.sin(a) * ry, tr = tilt * Math.PI / 180;
+    const X = x * Math.cos(tr) - y * Math.sin(tr), Y = x * Math.sin(tr) + y * Math.cos(tr), front = Math.sin(a);
+    gsap.set(sats[i], { x: X, y: Y, scale: 0.75 + 0.35 * (front + 1) / 2, opacity: P.on * (0.55 + 0.45 * (front + 1) / 2), zIndex: front > 0 ? 3 : 1 });
+  });
+  place();
+  tl.fromTo(P, { a: 0 }, { a: (t1 - t0) * 1.9, duration: t1 - t0, ease: "none", onUpdate: place, immediateRender: false }, t0)
+    .fromTo(P, { on: 0 }, { on: 1, duration: 0.8, ease: "power2.out", onUpdate: place, immediateRender: false }, t0 + 0.2)
+    .fromTo(spin, { rotation: 0, opacity: 0 }, { rotation: 360 * (t1 - t0) / 2.8, opacity: 1, duration: t1 - t0, ease: "none", immediateRender: false }, t0)
+    .to(lg, { rotationY: 11, rotationX: -6, transformPerspective: 900, duration: 1.5, yoyo: true, repeat: Math.max(1, Math.floor((t1 - t0) / 1.5) - 1), ease: "sine.inOut" }, t0 + 0.3);
+  for (let t = t0 + 0.5; t < t1 - 0.8; t += 1.9)
+    tl.fromTo(shine, { backgroundPosition: "100% 0" }, { backgroundPosition: "-20% 0", duration: 0.85, ease: "power2.inOut", immediateRender: false }, t);
+  BEATS.filter(b => b > t0 + 0.4 && b < t1 - 0.2).forEach(b => {
+    tl.fromTo(lg, { scale: 1.055 }, { scale: 1, duration: 0.5, ease: "power2.out", immediateRender: false }, b)
+      .fromTo(o.querySelector(".glow"), { opacity: 1 }, { opacity: 0.72, duration: 0.55, ease: "power2.out", immediateRender: false }, b);
+  });
+}
+liveLogo("#orb1", 3.45, 7.45); liveLogo("#orb3", 7.05, 12.75); liveLogo("#orb7", 25.35, 30);
 
 window.__timelines["main"] = tl;
 window.__ready = true;
