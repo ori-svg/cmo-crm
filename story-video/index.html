@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>CMO CRM Story</title>
+<script src="node_modules/gsap/dist/gsap.min.js"></script>
+<script src="node_modules/gsap/dist/MotionPathPlugin.min.js"></script>
+<style>
+@font-face { font-family: "Heebo"; font-weight: 400; src: url(node_modules/@fontsource/heebo/files/heebo-hebrew-400-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+@font-face { font-family: "Heebo"; font-weight: 600; src: url(node_modules/@fontsource/heebo/files/heebo-hebrew-600-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+@font-face { font-family: "Heebo"; font-weight: 800; src: url(node_modules/@fontsource/heebo/files/heebo-hebrew-800-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+@font-face { font-family: "Heebo"; font-weight: 900; src: url(node_modules/@fontsource/heebo/files/heebo-hebrew-900-normal.woff2) format("woff2"); unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F; }
+@font-face { font-family: "Heebo"; font-weight: 400; src: url(node_modules/@fontsource/heebo/files/heebo-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Heebo"; font-weight: 600; src: url(node_modules/@fontsource/heebo/files/heebo-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Heebo"; font-weight: 800; src: url(node_modules/@fontsource/heebo/files/heebo-latin-800-normal.woff2) format("woff2"); }
+@font-face { font-family: "Heebo"; font-weight: 900; src: url(node_modules/@fontsource/heebo/files/heebo-latin-900-normal.woff2) format("woff2"); }
+
+:root { --teal:#14a096; --cyan:#22d3ee; --gold:#e2b446; --green:#2ebe78; --red:#e64646; --ink:#050b16; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ink); }
+body { font-family: "Heebo", sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+#root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+.full { position: absolute; inset: 0; width: 1080px; height: 1920px; }
+.scene { position: absolute; inset: 0; width: 1080px; height: 1920px; opacity: 0; }
+svg.lines { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: visible; }
+
+/* ── background ── */
+#bg-fill { background: radial-gradient(900px 1300px at 50% 46%, #0e2236 0%, #07111f 55%, #03070e 100%); }
+.blob { position: absolute; border-radius: 50%; }
+#blob1 { width: 1300px; height: 1300px; left: -570px; top: -190px; background: radial-gradient(circle, rgba(15,127,120,.62) 0%, rgba(15,127,120,.25) 35%, transparent 68%); }
+#blob2 { width: 1300px; height: 1300px; right: -590px; bottom: -150px; background: radial-gradient(circle, rgba(154,122,34,.6) 0%, rgba(154,122,34,.22) 35%, transparent 68%); }
+#blob3 { width: 1000px; height: 1000px; left: 40px; top: -560px; background: radial-gradient(circle, rgba(29,63,154,.45) 0%, rgba(29,63,154,.15) 38%, transparent 68%); }
+#grid { background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 64px 64px; -webkit-mask-image: radial-gradient(620px 1000px at 50% 50%, #000 30%, transparent 80%); }
+#vignette { background: radial-gradient(900px 1400px at 50% 50%, transparent 55%, rgba(0,0,0,.6) 100%); }
+.mote { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #f3d27a; box-shadow: 0 0 12px 3px rgba(226,180,70,.55); }
+
+/* ── shared type ── */
+.headline { position: absolute; left: 60px; width: 960px; top: 300px; text-align: center; font: 900 104px/1.06 "Heebo", sans-serif; letter-spacing: -1px; }
+.headline .ln { display: block; }
+.gold { color: var(--gold); }
+.cyan { color: var(--cyan); }
+.label { position: absolute; left: 540px; top: 236px; transform: translateX(-50%); }
+.pill { display: inline-flex; align-items: center; gap: 14px; padding: 0 30px; height: 64px; border-radius: 40px; white-space: nowrap;
+  background: rgba(255,255,255,.95); color: #0b1d2b; font: 800 30px/64px "Heebo", sans-serif; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.pill .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+.glass { background: linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.035)); border: 2px solid rgba(255,255,255,.18);
+  box-shadow: 0 26px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.22); }
+svg.ic { width: 100%; height: 100%; display: block; }
+
+/* ── orb ── */
+.orb { position: absolute; width: 0; height: 0; }
+.orb .ring { position: absolute; border-radius: 50%; border: 2px solid rgba(226,180,70,.55); }
+.orb .r1 { width: 300px; height: 300px; left: -150px; top: -150px; }
+.orb .r2 { width: 390px; height: 390px; left: -195px; top: -195px; border-color: rgba(20,160,150,.5); border-style: dashed; }
+.orb .r3 { width: 510px; height: 510px; left: -255px; top: -255px; border-color: rgba(255,255,255,.1); }
+.orb .glow { position: absolute; width: 520px; height: 520px; left: -260px; top: -260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(226,180,70,.5) 0%, rgba(20,160,150,.25) 40%, transparent 70%); }
+.orb .flash { position: absolute; width: 320px; height: 320px; left: -160px; top: -160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.95), rgba(226,180,70,.45) 40%, transparent 70%); opacity: 0; }
+.orb img { position: absolute; width: 250px; height: 250px; left: -125px; top: -125px; display: block; }
+
+/* ── S1 chaos chips ── */
+.chip { position: absolute; height: 92px; padding: 0 30px 0 26px; margin-top: -46px; border-radius: 26px; display: flex; align-items: center; gap: 16px;
+  white-space: nowrap; font: 800 34px/1 "Heebo", sans-serif; color: #eaf3f7; transform-origin: 50% 50%; }
+.chip .i { width: 44px; height: 44px; flex: none; }
+.chip .tag { position: absolute; left: -16px; top: -20px; padding: 6px 12px; border-radius: 14px; background: var(--red); color: #fff;
+  font: 900 22px/1 "Heebo", sans-serif; box-shadow: 0 6px 16px rgba(230,70,70,.45); }
+.wordmark { position: absolute; left: 0; width: 1080px; text-align: center; direction: ltr; font: 900 150px/1 "Heebo", sans-serif; letter-spacing: 2px;
+  background: linear-gradient(180deg, #ffffff 30%, #bfe1ea 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tagline { position: absolute; left: 0; width: 1080px; text-align: center; font: 800 56px/1.2 "Heebo", sans-serif; color: var(--gold); }
+
+/* ── S3 source tiles ── */
+.tile { position: absolute; width: 140px; height: 140px; margin-left: -70px; margin-top: -70px; }
+.tile .face { position: absolute; inset: 0; border-radius: 38px; display: flex; align-items: center; justify-content: center; direction: ltr;
+  font: 900 72px/1 "Heebo", sans-serif; color: #fff; box-shadow: 0 22px 50px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.35); overflow: hidden; }
+.tile .face::after { content: ""; position: absolute; inset: 0; border-radius: 38px; background: linear-gradient(160deg, rgba(255,255,255,.3), transparent 45%); }
+.tile .halo { position: absolute; left: -75px; top: -75px; width: 290px; height: 290px; border-radius: 50%; opacity: 0; -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0,0,0,.5) 35%, transparent 68%); }
+.tile .pulse { position: absolute; left: -6px; top: -6px; width: 152px; height: 152px; border-radius: 44px; border: 4px solid; opacity: 0; }
+.tile .name { position: absolute; left: -80px; top: 156px; width: 300px; text-align: center; font: 800 30px/1 "Heebo", sans-serif; color: #e8f1f5; white-space: nowrap; }
+.tile .soon { position: absolute; right: -34px; top: -22px; padding: 8px 16px; border-radius: 20px; background: var(--gold); color: #241a00; font: 900 24px/1 "Heebo", sans-serif; opacity: 0; }
+.toast { position: absolute; padding: 0 26px; height: 60px; border-radius: 40px; background: rgba(46,190,120,.96); color: #fff; font: 800 30px/60px "Heebo", sans-serif;
+  box-shadow: 0 12px 30px rgba(0,0,0,.35), 0 0 0 6px rgba(46,190,120,.18); white-space: nowrap; }
+
+/* ── S4 real screen ── */
+#win { position: absolute; left: 40px; top: 640px; width: 1000px; height: 790px; border-radius: 30px; overflow: hidden; background: #fff;
+  box-shadow: 0 40px 90px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.12); transform-origin: 50% 30%; }
+#win .bar { height: 44px; background: #eef2f5; display: flex; align-items: center; gap: 10px; padding: 0 22px; direction: ltr; }
+#win .bar i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+#win .url { margin-left: 18px; height: 26px; flex: 1; border-radius: 13px; background: #fff; font: 600 17px/26px "Heebo", sans-serif; color: #61707c; padding: 0 14px; }
+#shotwrap { position: relative; width: 1000px; height: 746px; overflow: hidden; }
+#shot { position: absolute; left: 0; top: 0; width: 1000px; height: 746px; display: block; transform-origin: 0 0; }
+.focus { position: absolute; border-radius: 18px; border: 4px solid var(--gold); box-shadow: 0 0 0 2400px rgba(3,8,16,.62), 0 0 28px 6px rgba(226,180,70,.7); opacity: 0; }
+.srcpill { position: absolute; height: 70px; padding: 0 28px; border-radius: 36px; display: flex; align-items: center; gap: 12px; white-space: nowrap; direction: ltr;
+  font: 800 32px/1 "Heebo", sans-serif; color: #fff; }
+.srcpill b { width: 18px; height: 18px; border-radius: 50%; display: block; }
+
+/* ── S5 automation ── */
+#lead { position: absolute; left: 190px; top: 640px; width: 700px; height: 150px; border-radius: 34px; display: flex; align-items: center; gap: 26px; padding: 0 34px; }
+#lead .av { width: 92px; height: 92px; border-radius: 50%; flex: none; background: linear-gradient(145deg, #3b8cff, #1259c3); display: flex; align-items: center; justify-content: center;
+  font: 900 46px/1 "Heebo", sans-serif; box-shadow: 0 0 0 6px rgba(24,119,242,.25); }
+#lead .nm { font: 900 44px/1.1 "Heebo", sans-serif; }
+#lead .sb { font: 600 28px/1.3 "Heebo", sans-serif; color: rgba(255,255,255,.7); }
+#lead .new { margin-right: auto; padding: 10px 18px; border-radius: 20px; background: var(--green); font: 900 24px/1 "Heebo", sans-serif; }
+#hub { position: absolute; left: 470px; top: 900px; width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #f6d77c, #b88a1c); box-shadow: 0 0 0 10px rgba(226,180,70,.18), 0 0 60px 10px rgba(226,180,70,.45); color: #2a1d00; }
+#hub .i { width: 70px; height: 70px; }
+.act { position: absolute; width: 440px; height: 128px; border-radius: 30px; display: flex; align-items: center; gap: 20px; padding: 0 26px; }
+.act .ico { width: 74px; height: 74px; border-radius: 22px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; }
+.act .ico .i { width: 40px; height: 40px; }
+.act .t { font: 800 33px/1.15 "Heebo", sans-serif; }
+.act .ok { position: absolute; left: -18px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: #fff; padding: 9px;
+  box-shadow: 0 0 18px rgba(46,190,120,.7); }
+
+/* ── S6 dashboard ── */
+#dash { position: absolute; left: 60px; top: 640px; width: 960px; height: 700px; border-radius: 40px; padding: 40px; }
+.kpis { display: flex; gap: 24px; direction: rtl; }
+.kpi { flex: 1; height: 190px; border-radius: 26px; background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.12); padding: 24px 26px; position: relative; overflow: hidden; }
+.kpi .k { font: 800 32px/1 "Heebo", sans-serif; color: rgba(255,255,255,.85); }
+.kpi .up { position: absolute; left: 22px; top: 22px; padding: 6px 12px; border-radius: 14px; background: rgba(46,190,120,.2); color: #6ff0b0; font: 900 24px/1 "Heebo", sans-serif; direction: ltr; }
+.kpi svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 110px; }
+#chart { position: relative; margin-top: 30px; height: 400px; border-radius: 26px; background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.1); overflow: hidden; }
+#chart .bars { position: absolute; left: 40px; right: 40px; bottom: 40px; height: 290px; display: flex; align-items: flex-end; gap: 30px; direction: ltr; }
+#chart .bar { flex: 1; border-radius: 14px 14px 6px 6px; background: linear-gradient(180deg, var(--cyan), var(--teal)); transform-origin: 50% 100%; box-shadow: 0 0 24px rgba(34,211,238,.35); }
+#chart svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#loop { position: absolute; left: 540px; top: 1400px; transform: translateX(-50%); height: 96px; padding: 0 36px; border-radius: 48px; display: flex; align-items: center; gap: 18px;
+  white-space: nowrap; font: 800 36px/1 "Heebo", sans-serif; }
+#loop .i { width: 50px; height: 50px; color: var(--gold); }
+#loop .meta { color: #6aa8ff; direction: ltr; }
+
+/* ── S7 ecosystem ── */
+.mod { position: absolute; width: 128px; height: 128px; margin-left: -64px; margin-top: -64px; }
+.mod .face { position: absolute; inset: 0; border-radius: 36px; display: flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.3); }
+.mod .face .i { width: 60px; height: 60px; }
+.mod .name { position: absolute; left: -70px; top: 140px; width: 268px; text-align: center; font: 800 27px/1.1 "Heebo", sans-serif; color: #e8f1f5; white-space: nowrap; }
+.mod .halo { position: absolute; left: -66px; top: -66px; width: 260px; height: 260px; border-radius: 50%; opacity: 0; -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0,0,0,.5) 35%, transparent 68%); }
+#cta { position: absolute; left: 540px; top: 1500px; transform: translateX(-50%); height: 100px; padding: 0 44px; border-radius: 50px; white-space: nowrap;
+  background: linear-gradient(135deg, #f3d27a, #c9971f); color: #1d1400; font: 900 40px/100px "Heebo", sans-serif; box-shadow: 0 18px 50px rgba(226,180,70,.45), 0 0 0 8px rgba(226,180,70,.15); }
+#cta .arr { display: inline-block; margin-right: 12px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-width="1080" data-height="1920" data-duration="30">
+
+  <!-- background (whole duration) -->
+  <div id="bg" class="full">
+    <div id="bg-fill" class="full"></div>
+    <div id="blob1" class="blob"></div><div id="blob2" class="blob"></div><div id="blob3" class="blob"></div>
+    <div id="grid" class="full"></div>
+    <div id="motes" class="full"></div>
+    <div id="vignette" class="full"></div>
+  </div>
+
+  <!-- S1 + S2 : too many tools → one system -->
+  <div id="s1" class="scene">
+    <svg id="tangle" class="lines" viewBox="0 0 1080 1920"></svg>
+    <div id="h1" class="headline"><span class="ln">כמה מערכות</span><span class="ln">אתם משלמים</span><span class="ln gold">כל חודש?</span></div>
+    <div id="h2" class="headline"><span class="ln">ומה אם הכל</span><span class="ln gold">במקום אחד?</span></div>
+    <div id="orb1" class="orb" style="left:540px;top:1000px"><div class="glow"></div><div class="ring r3"></div><div class="ring r2"></div><div class="ring r1"></div><div class="flash"></div><img src="assets/logo.png" alt=""></div>
+    <div id="chips"></div>
+    <div id="wm1" class="wordmark" style="top:1290px">CMO CRM</div>
+    <div id="tg1" class="tagline" style="top:1460px">כל העסק. מערכת אחת.</div>
+  </div>
+
+  <!-- S3 : every lead source flows in -->
+  <div id="s3" class="scene">
+    <div class="label"><span class="pill"><span class="dot"></span>קליטת לידים</span></div>
+    <div id="h3a" class="headline" style="top:330px"><span class="ln">כל ליד נכנס</span><span class="ln gold">ישר למערכת</span></div>
+    <div id="h3b" class="headline" style="top:330px;font-size:90px"><span class="ln">בלי <bdi>Make</bdi> ובלי <bdi>Zapier</bdi></span><span class="ln cyan">ישר, בזמן אמת</span></div>
+    <svg id="lines3" class="lines" viewBox="0 0 1080 1920"><defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="bigglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+    </defs></svg>
+    <div id="orb3" class="orb" style="left:540px;top:1000px"><div class="glow"></div><div class="ring r3"></div><div class="ring r2"></div><div class="ring r1"></div><div class="flash"></div><img src="assets/logo.png" alt=""></div>
+    <div id="tiles3"></div>
+    <div id="t1" class="toast" style="left:640px;top:830px">+ ליד חדש</div>
+    <div id="t2" class="toast" style="left:250px;top:900px">+ ליד חדש</div>
+    <div id="t3" class="toast" style="left:600px;top:1150px">+ ליד חדש</div>
+  </div>
+
+  <!-- S4 : the real system screen -->
+  <div id="s4" class="scene">
+    <div class="label"><span class="pill"><span class="dot"></span>הגדרות ← אינטגרציות</span></div>
+    <div id="h4" class="headline" style="top:330px"><span class="ln">מחברים מקור</span><span class="ln gold">בכמה קליקים</span></div>
+    <div id="win">
+      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="url">app.cmo-crm.com</span></div>
+      <div id="shotwrap"><img id="shot" src="assets/s1.jpg" alt="">
+        <div id="fA" class="focus" style="left:405px;top:140px;width:372px;height:250px"></div>
+        <div id="fB" class="focus" style="left:12px;top:60px;width:770px;height:690px"></div>
+      </div>
+    </div>
+    <div id="srcrow"></div>
+  </div>
+
+  <!-- S5 : automations -->
+  <div id="s5" class="scene">
+    <div class="label"><span class="pill"><span class="dot"></span>אוטומציות</span></div>
+    <div id="h5" class="headline" style="top:330px"><span class="ln">והמערכת כבר</span><span class="ln gold">מטפלת בליד</span></div>
+    <svg id="lines5" class="lines" viewBox="0 0 1080 1920"></svg>
+    <div id="lead" class="glass"><div class="av">ד</div><div><div class="nm">דנה כהן</div><div class="sb">ליד מפייסבוק · עכשיו</div></div><div class="new">ליד חדש</div></div>
+    <div id="hub"><div class="i"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" />
+</svg></div></div>
+    <div id="acts"></div>
+  </div>
+
+  <!-- S6 : dashboard + results back to Meta -->
+  <div id="s6" class="scene">
+    <div class="label"><span class="pill"><span class="dot"></span>דשבורד</span></div>
+    <div id="h6" class="headline" style="top:330px"><span class="ln">רואים בדיוק</span><span class="ln gold">מה מביא כסף</span></div>
+    <div id="dash" class="glass">
+      <div class="kpis">
+        <div class="kpi"><div class="k">לידים</div><div class="up">▲</div><svg viewBox="0 0 280 110" preserveAspectRatio="none"><path class="spark" d="M0 95 C40 88 60 70 95 74 S150 50 185 46 S240 22 280 12" fill="none" stroke="#22d3ee" stroke-width="5"/></svg></div>
+        <div class="kpi"><div class="k">אחוזי סגירה</div><div class="up">▲</div><svg viewBox="0 0 280 110" preserveAspectRatio="none"><path class="spark" d="M0 90 C35 92 70 72 100 76 S160 58 190 40 S245 34 280 20" fill="none" stroke="#2ebe78" stroke-width="5"/></svg></div>
+        <div class="kpi"><div class="k" style="direction:ltr;text-align:right">ROAS</div><div class="up">▲</div><svg viewBox="0 0 280 110" preserveAspectRatio="none"><path class="spark" d="M0 98 C30 86 70 88 100 66 S170 60 200 36 S250 20 280 8" fill="none" stroke="#e2b446" stroke-width="5"/></svg></div>
+      </div>
+      <div id="chart">
+        <div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        <svg viewBox="0 0 880 400" preserveAspectRatio="none"><path id="trend" d="M50 300 C140 290 190 250 260 240 S380 200 440 170 S560 140 620 110 S760 70 830 46" fill="none" stroke="#e2b446" stroke-width="6" stroke-linecap="round" filter="url(#glow)"/>
+        <circle id="trendDot" r="12" fill="#fff" filter="url(#glow)" opacity="0"/></svg>
+      </div>
+    </div>
+    <div id="loop" class="glass"><div class="i"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+  <path d="M21 3v5h-5" />
+  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+  <path d="M8 16H3v5" />
+</svg></div><span>תוצאות חוזרות ל־<span class="meta">Meta</span> · הקמפיין לומד</span></div>
+  </div>
+
+  <!-- S7 : the whole ecosystem + CTA -->
+  <div id="s7" class="scene">
+    <div id="h7" class="headline" style="top:250px;font-size:94px"><span class="ln">כל מה שהעסק צריך</span><span class="ln gold">במערכת אחת</span></div>
+    <svg id="lines7" class="lines" viewBox="0 0 1080 1920"></svg>
+    <div id="orb7" class="orb" style="left:540px;top:910px"><div class="glow"></div><div class="ring r3"></div><div class="ring r2"></div><div class="ring r1"></div><div class="flash"></div><img src="assets/logo.png" alt=""></div>
+    <div id="mods"></div>
+    <div id="wm7" class="wordmark" style="top:1330px;font-size:120px">CMO CRM</div>
+    <div id="cta"><span>רוצים את זה אצלכם?</span> <span class="arr">←</span></div>
+  </div>
+</div>
+
+<template id="icons">
+  <div data-k="users"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+  <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+  <circle cx="9" cy="7" r="4" />
+</svg></div><div data-k="wa"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />
+</svg></div><div data-k="mail"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
+  <rect x="2" y="4" width="20" height="16" rx="2" />
+</svg></div>
+  <div data-k="zap"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" />
+</svg></div><div data-k="page"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="18" height="7" x="3" y="3" rx="1" />
+  <rect width="9" height="7" x="3" y="14" rx="1" />
+  <rect width="5" height="7" x="16" y="14" rx="1" />
+</svg></div><div data-k="course"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+  <path d="M22 10v6" />
+  <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+</svg></div>
+  <div data-k="cal"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M8 2v3" />
+  <path d="M16 2v3" />
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <path d="M3 9h18" />
+  <path d="M8 13h.01" />
+  <path d="M12 13h.01" />
+  <path d="M16 13h.01" />
+  <path d="M8 17h.01" />
+  <path d="M12 17h.01" />
+  <path d="M16 17h.01" />
+</svg></div><div data-k="phone"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />
+</svg></div><div data-k="chart"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+  <path d="M18 17V9" />
+  <path d="M13 17V5" />
+  <path d="M8 17v-3" />
+</svg></div>
+  <div data-k="check"><svg class="ic"
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20 6 9 17l-5-5" />
+</svg></div>
+</template>
+
+<script>
+Promise.all(["400","600","800","900"].map(w=>document.fonts.load(w+" 40px Heebo","אבג ABC"))).then(()=>document.fonts.ready).then(()=>{
+gsap.registerPlugin(MotionPathPlugin);
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+const NS = "http://www.w3.org/2000/svg";
+const ICON = {}; document.getElementById("icons").content.querySelectorAll("[data-k]").forEach(d => ICON[d.dataset.k] = d.innerHTML);
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+const div = (cls, html, parent, style) => { const e = document.createElement("div"); if (cls) e.className = cls; e.innerHTML = html || ""; if (style) e.setAttribute("style", style); parent.appendChild(e); return e; };
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const XF = 0.45; // crossfade between scenes (playbook: 0.45s)
+
+/* ───────── background: slow drift + gold motes (finite) ───────── */
+tl.to("#blob1", { x: 160, y: 260, duration: 30, ease: "sine.inOut" }, 0)
+  .to("#blob2", { x: -180, y: -220, duration: 30, ease: "sine.inOut" }, 0)
+  .to("#blob3", { x: -140, y: 160, duration: 30, ease: "sine.inOut" }, 0)
+  .fromTo("#grid", { backgroundPositionY: 0 }, { backgroundPositionY: 256, duration: 30, ease: "none" }, 0);
+const motes = document.getElementById("motes");
+for (let i = 0; i < 38; i++) {
+  const m = div("mote", "", motes, `left:${(rnd() * 1080) | 0}px;top:${(200 + rnd() * 1700) | 0}px`);
+  const s = 0.4 + rnd() * 1.1; gsap.set(m, { scale: s, opacity: 0 });
+  tl.to(m, { opacity: 0.25 + rnd() * 0.6, duration: 1.5 }, rnd() * 3)
+    .to(m, { y: -(260 + rnd() * 420), x: (rnd() - 0.5) * 160, duration: 30, ease: "none" }, 0);
+}
+
+/* ───────── S1: the tool chaos (0 – 3.6) ───────── */
+const TOOLS = [ // label, icon, x(center), y, colour
+  ["CRM ללידים", "users", 300, 840, "#22d3ee"], ["WhatsApp עסקי", "wa", 770, 800, "#25d366"], ["מערכת דיוור", "mail", 560, 965, "#60a5fa"],
+  ["כלי אוטומציות", "zap", 280, 1095, "#e2b446"], ["בונה דפי נחיתה", "page", 790, 1120, "#a855f7"], ["פלטפורמת קורסים", "course", 520, 1250, "#f472b6"],
+  ["יומן תיאומים", "cal", 270, 1400, "#34d399"], ["מרכזיה וטלפוניה", "phone", 790, 1410, "#fb923c"], ["דוחות ודשבורד", "chart", 540, 1550, "#38bdf8"],
+];
+const chipsEl = document.getElementById("chips"), tangle = document.getElementById("tangle");
+const chipEls = TOOLS.map(([lbl, ic, x, y, col], i) => {
+  const c = div("chip glass", `<span class="i" style="color:${col}">${ICON[ic]}</span>${lbl}<span class="tag">₪ / חודש</span>`, chipsEl, `left:${x}px;top:${y}px`);
+  c.style.marginLeft = -(c.offsetWidth / 2) + "px"; return c;
+});
+// tangled dashed wires between tools = the mess
+[[0,2],[2,1],[0,3],[3,5],[5,4],[1,4],[3,6],[6,8],[8,7],[7,4],[5,8],[2,5]].forEach(([a, b], i) => {
+  const A = TOOLS[a], B = TOOLS[b], mx = (A[2] + B[2]) / 2 + (i % 2 ? 90 : -90), my = (A[3] + B[3]) / 2 + (i % 3 - 1) * 60;
+  const p = mk("path", { d: `M${A[2]} ${A[3]} Q${mx} ${my} ${B[2]} ${B[3]}`, fill: "none", stroke: "rgba(255,120,120,.38)", "stroke-width": 3, "stroke-dasharray": "8 10" }, tangle);
+  gsap.set(p, { opacity: 0 }); tl.to(p, { opacity: 1, duration: 0.4 }, 1.0 + i * 0.08).to(p, { strokeDashoffset: -72, duration: 2.6, ease: "none" }, 1.0);
+});
+tl.set("#s1", { opacity: 1 }, 0);
+gsap.set("#h1 .ln", { opacity: 0, y: 50 }); gsap.set("#h2 .ln", { opacity: 0, y: 50 });
+tl.to("#h1 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.22 }, 0.15);
+gsap.set(".chip", { opacity: 0, scale: 0.4 });
+chipEls.forEach((c, i) => {
+  const at = 0.45 + i * 0.13;
+  tl.to(c, { opacity: 1, scale: 1, rotation: (rnd() - 0.5) * 10, duration: 0.5, ease: "back.out(2.2)" }, at)
+    .to(c, { y: (rnd() - 0.5) * 30, rotation: (rnd() - 0.5) * 14, duration: 0.9, ease: "sine.inOut", yoyo: true, repeat: 1 }, at + 0.5);
+});
+gsap.set(".chip .tag", { scale: 0 });
+tl.to(".chip .tag", { scale: 1, duration: 0.35, ease: "back.out(3)", stagger: 0.07 }, 1.7);
+// shake of frustration
+tl.to("#chips", { x: 8, duration: 0.05, yoyo: true, repeat: 7, ease: "none" }, 2.75);
+
+/* ───────── S2: everything collapses into the orb (3.3 – 7.2) ───────── */
+const orb1 = "#orb1";
+gsap.set(orb1, { scale: 0, opacity: 0 }); gsap.set(["#wm1", "#tg1"], { opacity: 0, y: 40 });
+tl.to("#h1", { opacity: 0, y: -40, duration: 0.4, ease: "power2.in" }, 3.3)
+  .to("#h2 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.2 }, 3.6)
+  .to("#tangle", { opacity: 0, duration: 0.4 }, 3.3)
+  .to(orb1, { scale: 0.75, opacity: 1, duration: 0.7, ease: "back.out(1.6)" }, 3.45)
+  .to(`${orb1} .r2`, { rotation: 180, duration: 3.5, ease: "none" }, 3.45);
+chipEls.forEach((c, i) => {
+  const at = 3.8 + i * 0.1, [, , x, y] = TOOLS[i];
+  const dx = 540 - x, dy = 1000 - y;
+  tl.to(c, { x: dx, y: dy, scale: 0.15, rotation: (i % 2 ? 1 : -1) * 90, duration: 0.75, ease: "power3.in" }, at)
+    .to(c, { opacity: 0, duration: 0.15 }, at + 0.62)
+    .fromTo(`${orb1} .flash`, { opacity: 0.85, scale: 0.6 }, { opacity: 0, scale: 1.3, duration: 0.45, ease: "power2.out", immediateRender: false }, at + 0.7);
+});
+tl.to(orb1, { scale: 1.1, duration: 0.8, ease: "back.out(2)" }, 5.0)
+  .fromTo(`${orb1} .flash`, { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2.6, duration: 0.9, ease: "power2.out", immediateRender: false }, 5.0)
+  .fromTo(`${orb1} .r1`, { scale: 0.7 }, { scale: 1.1, duration: 1, ease: "sine.inOut", yoyo: true, repeat: 1 }, 5.0)
+  .to(`${orb1} img`, { rotation: 10, duration: 2.2, ease: "sine.inOut" }, 5.0)
+  .to("#wm1", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 5.35)
+  .to("#tg1", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 5.7)
+  .to("#s1", { opacity: 0, scale: 1.06, duration: XF, ease: "power2.in" }, 7.0);
+
+/* ───────── S3: lead sources (7.0 – 12.4) ───────── */
+const T3 = 7.0, CX = 540, CY = 1000;
+const SRC = [ // key, x, y, colour, face bg, glyph, name, appear(local)
+  ["FB", 850, 700, "#1877f2", "linear-gradient(145deg,#3b8cff,#1259c3)", "f", "Facebook", 0.55],
+  ["GO", 870, 1270, "#34a853", "#fff", '<span style="color:#4285f4">G</span>', "Google", 0.85],
+  ["LI", 230, 700, "#0a66c2", "linear-gradient(145deg,#1f86e6,#08509a)", '<span style="font-size:58px">in</span>', "LinkedIn", 1.15],
+  ["TT", 210, 1270, "#ff0050", "#0b0b0f", '<span style="text-shadow:-4px -3px 0 #00f2ea,4px 3px 0 #ff0050">♪</span>', "TikTok", 1.45],
+  ["WB", 540, 1460, "#a855f7", "linear-gradient(145deg,#9b5cf6,#5b21b6)", '<span style="font-size:38px">www</span>', "האתר שלכם", 1.75],
+];
+const svg3 = document.getElementById("lines3"), defs3 = svg3.querySelector("defs"), tiles3 = document.getElementById("tiles3");
+tl.to("#s3", { opacity: 1, duration: XF }, T3 - 0.05);
+gsap.set("#s3 .label", { opacity: 0, y: -20 }); gsap.set(["#h3a .ln", "#h3b .ln"], { opacity: 0, y: 50 });
+gsap.set("#orb3", { scale: 0.55, opacity: 0 });
+tl.to("#s3 .label", { opacity: 1, y: 0, duration: 0.5, ease: "back.out(2)" }, T3 + 0.2)
+  .to("#h3a .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.18 }, T3 + 0.25)
+  .to("#orb3", { opacity: 0.55, scale: 0.62, duration: 0.8, ease: "power2.out" }, T3 + 0.1)
+  .to("#orb3 .r2", { rotation: 220, duration: 5.4, ease: "none" }, T3);
+SRC.forEach(([k, x, y, col, bg, glyph, name, at]) => {
+  at += T3;
+  const g = mk("linearGradient", { id: "g" + k, gradientUnits: "userSpaceOnUse", x1: x, y1: y, x2: CX, y2: CY }, defs3);
+  mk("stop", { offset: "0", "stop-color": col, id: "s0" + k }, g); mk("stop", { offset: "1", "stop-color": "#e2b446", id: "s1" + k }, g);
+  const qx = k === "WB" ? 640 : (x + CX) / 2 + (x > CX ? -60 : 60), qy = k === "WB" ? 1240 : (y + CY) / 2 + (y < CY ? -70 : 70);
+  const d = `M${x} ${y} Q${qx} ${qy} ${CX} ${CY}`;
+  const h = mk("path", { d, fill: "none", stroke: `url(#g${k})`, "stroke-width": 26, opacity: 0.45, filter: "url(#bigglow)" }, svg3);
+  const p = mk("path", { d, fill: "none", stroke: `url(#g${k})`, "stroke-width": 7, "stroke-linecap": "round" }, svg3);
+  const f = mk("path", { d, fill: "none", stroke: "#fff", "stroke-width": 4, "stroke-linecap": "round", filter: "url(#glow)", opacity: 0 }, svg3);
+  const dot = mk("circle", { r: 12, fill: "#fff", filter: "url(#glow)", opacity: 0 }, svg3);
+  const dot2 = mk("circle", { r: 10, fill: "#e2b446", filter: "url(#glow)", opacity: 0 }, svg3);
+  const t = div("tile", `<div class="halo" style="background:${col}"></div><div class="pulse" style="border-color:${col}"></div><div class="face" style="background:${bg}">${glyph}</div><div class="name">${name}</div>` + (k === "TT" ? '<div class="soon">בקרוב</div>' : ""), tiles3, `left:${x}px;top:${y}px`);
+  const L = p.getTotalLength();
+  gsap.set([p, h], { strokeDasharray: L, strokeDashoffset: L }); gsap.set(f, { strokeDasharray: `110 ${L + 200}`, strokeDashoffset: 110 });
+  gsap.set(t, { scale: 0, opacity: 0, rotation: -12 });
+  tl.to(t, { scale: 1, opacity: 1, rotation: 0, duration: 0.6, ease: "back.out(1.9)" }, at)
+    .to(t.querySelector(".halo"), { opacity: 0.75, duration: 0.4 }, at + 0.25)
+    .fromTo(t.querySelector(".pulse"), { opacity: 1, scale: 1 }, { opacity: 0, scale: 1.6, duration: 0.8, ease: "power2.out", immediateRender: false }, at + 0.3)
+    .to([p, h], { strokeDashoffset: 0, duration: 0.85, ease: "power2.inOut" }, at + 0.3)
+    .fromTo(f, { opacity: 1, strokeDashoffset: 110 }, { strokeDashoffset: -L, duration: 0.85, ease: "power2.inOut", immediateRender: false }, at + 0.3)
+    .set(f, { opacity: 0 }, at + 1.15)
+    .fromTo("#orb3 .flash", { opacity: 0.9, scale: 0.6 }, { opacity: 0, scale: 1.4, duration: 0.6, ease: "power2.out", immediateRender: false }, at + 1.1)
+    .to(t.querySelector(".halo"), { opacity: 0.35, duration: 0.8 }, at + 1.3);
+  if (k === "TT") { tl.to([p, h], { opacity: 0.25, duration: 0.5 }, at + 1.2).to(t.querySelector(".soon"), { opacity: 1, duration: 0.4, ease: "back.out(3)" }, at + 0.9); return; }
+  tl.to("#s0" + k, { stopColor: "#22d3ee", duration: 1.3, ease: "sine.inOut", yoyo: true, repeat: 2 }, at + 1.2)
+    .to("#s1" + k, { stopColor: col, duration: 1.3, ease: "sine.inOut", yoyo: true, repeat: 2 }, at + 1.2);
+  for (let i = 0; i < 4; i++) { const t0 = at + 1.4 + i * 1.0; if (t0 > T3 + 5.0) break;
+    tl.fromTo(f, { opacity: 0.9, strokeDashoffset: 110 }, { strokeDashoffset: -L, duration: 0.8, ease: "power1.in", immediateRender: false }, t0).set(f, { opacity: 0 }, t0 + 0.8); }
+  // leads travelling on the line
+  [[dot, at + 1.0], [dot2, T3 + 2.75 + "FGLW".indexOf(k[0]) * 0.1]].forEach(([o, t0]) => {
+    tl.set(o, { opacity: 1 }, t0).to(o, { motionPath: { path: p, align: p, alignOrigin: [0.5, 0.5] }, duration: 0.9, ease: "power2.in" }, t0).set(o, { opacity: 0 }, t0 + 0.9);
+  });
+});
+gsap.set(".toast", { opacity: 0, y: 30, scale: 0.8 });
+tl.to("#orb3", { opacity: 1, scale: 0.85, duration: 0.8, ease: "back.out(1.6)" }, T3 + 3.55)
+  .fromTo("#orb3 .flash", { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2.4, duration: 0.9, ease: "power2.out", immediateRender: false }, T3 + 3.6)
+  .fromTo("#orb3 .r1", { scale: 0.8 }, { scale: 1.1, duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 1 }, T3 + 3.6)
+  .to("#t1", { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.4)" }, T3 + 3.75)
+  .to("#t2", { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.4)" }, T3 + 3.95)
+  .to("#t3", { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.4)" }, T3 + 4.15)
+  .to("#h3a", { opacity: 0, y: -30, duration: 0.35 }, T3 + 2.9)
+  .to("#h3b .ln", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.25 }, T3 + 3.15)
+  .to("#s3", { opacity: 0, scale: 1.06, duration: XF, ease: "power2.in" }, T3 + 5.3);
+
+/* ───────── S4: the real screen (12.3 – 16.9) ───────── */
+const T4 = 12.3;
+tl.to("#s4", { opacity: 1, duration: XF }, T4);
+gsap.set("#s4 .label", { opacity: 0, y: -20 }); gsap.set("#h4 .ln", { opacity: 0, y: 50 });
+gsap.set("#win", { opacity: 0, y: 140, rotationX: 18, scale: 0.92, transformPerspective: 1600 });
+tl.to("#s4 .label", { opacity: 1, y: 0, duration: 0.5, ease: "back.out(2)" }, T4 + 0.15)
+  .to("#h4 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.18 }, T4 + 0.2)
+  .to("#win", { opacity: 1, y: 0, rotationX: 0, scale: 1, duration: 0.9, ease: "power3.out" }, T4 + 0.3)
+  .to("#shot", { scale: 1.06, x: -30, y: -10, duration: 4.2, ease: "sine.inOut" }, T4 + 0.5)
+  // focus on all source cards first, then on the Meta card ("טפסי לידים")
+  .fromTo("#fB", { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, T4 + 1.1)
+  .to("#fB", { opacity: 0, duration: 0.35 }, T4 + 2.15)
+  .fromTo("#fA", { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, T4 + 2.3)
+  .to("#fA", { boxShadow: "0 0 0 2400px rgba(3,8,16,.62), 0 0 46px 14px rgba(226,180,70,.85)", duration: 0.5, yoyo: true, repeat: 3, ease: "sine.inOut" }, T4 + 2.8);
+const PILLS = [["Facebook", "#1877f2"], ["Google", "#34a853"], ["LinkedIn", "#0a66c2"], ["Webhook", "#a855f7"], ["API", "#e2b446"]];
+const srcrow = document.getElementById("srcrow");
+const rows = [[0, 1, 2], [3, 4]];
+rows.forEach((row, r) => {
+  const els = row.map(i => div("srcpill glass", `<b style="background:${PILLS[i][1]};box-shadow:0 0 12px ${PILLS[i][1]}"></b>${PILLS[i][0]}`, srcrow));
+  const gap = 20, total = els.reduce((s, e) => s + e.offsetWidth, 0) + gap * (els.length - 1);
+  let xx = 540 - total / 2; els.forEach(e => { e.style.left = xx + "px"; e.style.top = (1470 + r * 92) + "px"; xx += e.offsetWidth + gap; });
+  els.forEach((e, j) => { gsap.set(e, { opacity: 0, y: 30, scale: 0.8 }); tl.to(e, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2.2)" }, T4 + 1.4 + (r * 3 + j) * 0.14); });
+});
+tl.to("#s4", { opacity: 0, scale: 1.06, duration: XF, ease: "power2.in" }, T4 + 4.4);
+
+/* ───────── S5: automations (16.7 – 21.6) ───────── */
+const T5 = 16.7, HX = 540, HY = 970;
+const ACTS = [ // label, icon, bg, x(left), y(top)
+  ["WhatsApp אוטומטי", "wa", "linear-gradient(145deg,#2ee07a,#128c4a)", 560, 1150],
+  ["מייל ברוכים הבאים", "mail", "linear-gradient(145deg,#5aa2ff,#2563eb)", 80, 1150],
+  ["משימה לנציג", "users", "linear-gradient(145deg,#f3d27a,#b88a1c)", 560, 1310],
+  ["פגישה ביומן", "cal", "linear-gradient(145deg,#b07cff,#6d28d9)", 80, 1310],
+];
+const svg5 = document.getElementById("lines5"), acts = document.getElementById("acts");
+tl.to("#s5", { opacity: 1, duration: XF }, T5);
+gsap.set("#s5 .label", { opacity: 0, y: -20 }); gsap.set("#h5 .ln", { opacity: 0, y: 50 });
+gsap.set("#lead", { opacity: 0, y: -60, scale: 0.9 }); gsap.set("#hub", { opacity: 0, scale: 0 });
+const trunk = mk("path", { d: `M540 790 L540 ${HY - 70}`, fill: "none", stroke: "#e2b446", "stroke-width": 6, "stroke-linecap": "round", filter: "url(#glow)" }, svg5);
+const TL = trunk.getTotalLength(); gsap.set(trunk, { strokeDasharray: TL, strokeDashoffset: TL });
+tl.to("#s5 .label", { opacity: 1, y: 0, duration: 0.5, ease: "back.out(2)" }, T5 + 0.15)
+  .to("#h5 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.18 }, T5 + 0.2)
+  .to("#lead", { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "back.out(1.8)" }, T5 + 0.45)
+  .fromTo("#lead .new", { scale: 0 }, { scale: 1, duration: 0.4, ease: "back.out(3)", immediateRender: false }, T5 + 0.95)
+  .to(trunk, { strokeDashoffset: 0, duration: 0.5, ease: "power2.in" }, T5 + 1.2)
+  .to("#hub", { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(2.4)" }, T5 + 1.55)
+  .to("#hub", { boxShadow: "0 0 0 22px rgba(226,180,70,.12), 0 0 90px 24px rgba(226,180,70,.6)", duration: 0.45, yoyo: true, repeat: 5, ease: "sine.inOut" }, T5 + 1.9);
+ACTS.forEach(([lbl, ic, bg, x, y], i) => {
+  const a = div("act glass", `<div class="ico" style="background:${bg}"><span class="i">${ICON[ic]}</span></div><div class="t">${lbl}</div><div class="ok">${ICON.check}</div>`, acts, `left:${x}px;top:${y}px`);
+  const tx = x + 220, ty = y;
+  const d = `M${HX} ${HY + 70} C${HX} ${HY + 130} ${tx} ${ty - 90} ${tx} ${ty}`;
+  const p = mk("path", { d, fill: "none", stroke: "rgba(226,180,70,.85)", "stroke-width": 5, "stroke-linecap": "round", filter: "url(#glow)" }, svg5);
+  const o = mk("circle", { r: 11, fill: "#fff", filter: "url(#glow)", opacity: 0 }, svg5);
+  const L = p.getTotalLength(); gsap.set(p, { strokeDasharray: L, strokeDashoffset: L });
+  gsap.set(a, { opacity: 0, y: 40, scale: 0.85 }); gsap.set(a.querySelector(".ok"), { scale: 0, opacity: 0 });
+  const at = T5 + 2.0 + i * 0.32;
+  tl.to(p, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" }, at)
+    .set(o, { opacity: 1 }, at).to(o, { motionPath: { path: p, align: p, alignOrigin: [0.5, 0.5] }, duration: 0.5, ease: "power1.in" }, at).set(o, { opacity: 0 }, at + 0.5)
+    .to(a, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, at + 0.35)
+    .to(a.querySelector(".ok"), { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(3)" }, T5 + 3.6 + i * 0.15);
+});
+tl.to("#s5", { opacity: 0, scale: 1.06, duration: XF, ease: "power2.in" }, T5 + 4.75);
+
+/* ───────── S6: dashboard + results back to Meta (21.45 – 25.6) ───────── */
+const T6 = 21.45;
+tl.to("#s6", { opacity: 1, duration: XF }, T6);
+gsap.set("#s6 .label", { opacity: 0, y: -20 }); gsap.set("#h6 .ln", { opacity: 0, y: 50 });
+gsap.set("#dash", { opacity: 0, y: 120, scale: 0.94 }); gsap.set(".kpi", { opacity: 0, y: 30 }); gsap.set(".kpi .up", { scale: 0 });
+gsap.set("#loop", { opacity: 0, y: 40 });
+document.querySelectorAll(".spark").forEach(s => { const L = s.getTotalLength(); gsap.set(s, { strokeDasharray: L, strokeDashoffset: L }); });
+const trend = document.getElementById("trend"), TRL = trend.getTotalLength(); gsap.set(trend, { strokeDasharray: TRL, strokeDashoffset: TRL });
+const H = [0.34, 0.45, 0.41, 0.58, 0.66, 0.79, 0.95];
+gsap.set("#chart .bar", { scaleY: 0 }); document.querySelectorAll("#chart .bar").forEach((b, i) => b.style.height = (H[i] * 100) + "%");
+tl.to("#s6 .label", { opacity: 1, y: 0, duration: 0.5, ease: "back.out(2)" }, T6 + 0.15)
+  .to("#h6 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.18 }, T6 + 0.2)
+  .to("#dash", { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }, T6 + 0.35)
+  .to(".kpi", { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", stagger: 0.12 }, T6 + 0.7)
+  .to(".spark", { strokeDashoffset: 0, duration: 1.0, ease: "power2.inOut", stagger: 0.12 }, T6 + 0.9)
+  .to(".kpi .up", { scale: 1, duration: 0.35, ease: "back.out(3)", stagger: 0.12 }, T6 + 1.7)
+  .to("#chart .bar", { scaleY: 1, duration: 0.7, ease: "back.out(1.6)", stagger: 0.09 }, T6 + 1.0)
+  .to(trend, { strokeDashoffset: 0, duration: 1.2, ease: "power2.inOut" }, T6 + 1.5)
+  .set("#trendDot", { opacity: 1 }, T6 + 1.5)
+  .to("#trendDot", { motionPath: { path: trend, align: trend, alignOrigin: [0.5, 0.5] }, duration: 1.2, ease: "power2.inOut" }, T6 + 1.5)
+  .to("#loop", { opacity: 1, y: 0, duration: 0.55, ease: "back.out(2)" }, T6 + 2.2)
+  .to("#loop .i", { rotation: -360, duration: 1.4, ease: "power2.inOut" }, T6 + 2.4)
+  .to("#s6", { opacity: 0, scale: 1.06, duration: XF, ease: "power2.in" }, T6 + 3.85);
+
+/* ───────── S7: the ecosystem + CTA (25.3 – 30) ───────── */
+const T7 = 25.3, OX = 540, OY = 910;
+const MODS = [ // name, icon, bg
+  ["לידים ולקוחות", "users", "linear-gradient(145deg,#22d3ee,#0e7490)"], ["WhatsApp", "wa", "linear-gradient(145deg,#2ee07a,#128c4a)"],
+  ["מיילים ודיוור", "mail", "linear-gradient(145deg,#5aa2ff,#2563eb)"], ["אוטומציות", "zap", "linear-gradient(145deg,#f3d27a,#b88a1c)"],
+  ["דפי נחיתה", "page", "linear-gradient(145deg,#b07cff,#6d28d9)"], ["קורסים דיגיטליים", "course", "linear-gradient(145deg,#f472b6,#be185d)"],
+  ["יומן ופגישות", "cal", "linear-gradient(145deg,#34d399,#047857)"], ["טלפוניה", "phone", "linear-gradient(145deg,#fb923c,#c2410c)"],
+  ["דשבורד", "chart", "linear-gradient(145deg,#38bdf8,#1d4ed8)"],
+];
+const svg7 = document.getElementById("lines7"), mods = document.getElementById("mods");
+tl.to("#s7", { opacity: 1, duration: XF }, T7);
+gsap.set("#h7 .ln", { opacity: 0, y: 50 }); gsap.set("#orb7", { scale: 0.3, opacity: 0 }); gsap.set(["#wm7", "#cta"], { opacity: 0, y: 40 });
+tl.to("#orb7", { opacity: 1, scale: 0.78, duration: 0.7, ease: "back.out(1.7)" }, T7 + 0.1)
+  .to("#orb7 .r2", { rotation: 200, duration: 4.6, ease: "none" }, T7)
+  .to("#orb7 img", { rotation: 14, duration: 4.6, ease: "sine.inOut" }, T7)
+  .to("#h7 .ln", { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.2 }, T7 + 0.2);
+MODS.forEach(([name, ic, bg], i) => {
+  const ang = -Math.PI / 2 + i * (2 * Math.PI / MODS.length), x = OX + Math.cos(ang) * 375, y = OY + Math.sin(ang) * 285;
+  const m = div("mod", `<div class="halo" style="background:${bg}"></div><div class="face" style="background:${bg}"><span class="i">${ICON[ic]}</span></div><div class="name">${name}</div>`, mods, `left:${x}px;top:${y}px`);
+  const p = mk("path", { d: `M${x} ${y} L${OX} ${OY}`, fill: "none", stroke: "rgba(226,180,70,.7)", "stroke-width": 4, filter: "url(#glow)" }, svg7);
+  const f = mk("path", { d: `M${x} ${y} L${OX} ${OY}`, fill: "none", stroke: "#fff", "stroke-width": 4, "stroke-linecap": "round", filter: "url(#glow)", opacity: 0 }, svg7);
+  const L = p.getTotalLength(); gsap.set(p, { strokeDasharray: L, strokeDashoffset: L }); gsap.set(f, { strokeDasharray: `60 ${L + 100}`, strokeDashoffset: 60 });
+  gsap.set(m, { opacity: 0, scale: 0, rotation: -15 });
+  const at = T7 + 0.45 + i * 0.12;
+  tl.to(m, { opacity: 1, scale: 1, rotation: 0, duration: 0.5, ease: "back.out(2.2)" }, at)
+    .to(m.querySelector(".halo"), { opacity: 0.45, duration: 0.5 }, at + 0.2)
+    .to(p, { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut" }, at + 0.2);
+  for (let r = 0; r < 3; r++) { const t0 = at + 0.8 + r * 1.1;
+    tl.fromTo(f, { opacity: 1, strokeDashoffset: 60 }, { strokeDashoffset: -L, duration: 0.7, ease: "power1.in", immediateRender: false }, t0).set(f, { opacity: 0 }, t0 + 0.7); }
+});
+tl.fromTo("#orb7 .flash", { opacity: 1, scale: 0.6 }, { opacity: 0, scale: 2.4, duration: 0.9, ease: "power2.out", immediateRender: false }, T7 + 1.75)
+  .to("#orb7", { scale: 0.92, duration: 0.6, ease: "back.out(2)" }, T7 + 1.75)
+  .to("#wm7", { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, T7 + 2.0)
+  .to("#cta", { opacity: 1, y: 0, duration: 0.6, ease: "back.out(2)" }, T7 + 2.45)
+  .to("#cta .arr", { x: -12, duration: 0.35, ease: "sine.inOut", yoyo: true, repeat: 5 }, T7 + 3.0)
+  .to("#cta", { boxShadow: "0 18px 60px rgba(226,180,70,.7), 0 0 0 18px rgba(226,180,70,.12)", duration: 0.6, yoyo: true, repeat: 2, ease: "sine.inOut" }, T7 + 2.9)
+  .set({}, {}, 30);
+
+window.__timelines["main"] = tl;
+window.__ready = true;
+});
+</script>
+</body>
+</html>

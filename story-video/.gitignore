@@ -1,0 +1,7 @@
+node_modules/
+out/frames/
+out/snap_*
+out/music.wav
+out/*.png
+bis.html
+out/music_n.wav

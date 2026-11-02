@@ -1,0 +1,17 @@
+{
+  "name": "story-video",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/heebo": "^5.2.5",
+    "gsap": "^3.13.0",
+    "lucide-static": "^1.66.0"
+  }
+}
